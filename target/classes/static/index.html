@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projekt Kordelia — demo architektury</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header>
+    <div class="header-top">
+        <h1>Projekt Kordelia</h1>
+        <div class="toolbar">
+            <label class="field">
+                <span>Rola</span>
+                <select id="role-select">
+                    <option value="AGENT_AI">Agent AI</option>
+                    <option value="SPECJALISTA" selected>Specjalista</option>
+                    <option value="ADMIN">Admin</option>
+                </select>
+            </label>
+            <button id="ai-toggle-btn" class="btn btn-ghost">
+                <span id="ai-status-dot" class="dot dot-on"></span>
+                <span id="ai-status-label">AI połączone</span>
+            </button>
+            <button id="reset-btn" class="btn btn-ghost">Resetuj</button>
+            <button id="run-triage-btn" class="btn btn-primary">Uruchom triage</button>
+        </div>
+    </div>
+
+    <div class="tester">
+        <div class="tester-label">
+            🔬 Testuj rozpoznawanie na żywo — dowolny tekst, bez odpalania całego triage:
+        </div>
+        <div class="inline-form">
+            <input id="cs-sender" type="text" value="opiekun4471@example.com" style="width:190px;">
+            <input id="cs-text" type="text" value="Czy opinia dla Natalki jest już gotowa?" style="width:280px;">
+            <button id="cs-run-btn" class="btn btn-ghost">Sprawdź status</button>
+            <span id="case-status-result"></span>
+        </div>
+        <div class="presets">
+            <span class="presets-label">Wypróbuj:</span>
+            <button class="btn btn-ghost preset-btn" data-sender="ktos.obcego@example.com" data-text="Pytam o Natalkę, kiedy będzie gotowa opinia?">Zły nadawca, zna imię</button>
+            <button class="btn btn-ghost preset-btn" data-sender="opiekun.dwojga@example.com" data-text="Czy opinia dla Julii jest już gotowa?">Dwoje dzieci — poprawnie</button>
+            <button class="btn btn-ghost preset-btn" data-sender="opiekun.dwojga@example.com" data-text="Czy opinia dla Mikolaja jest gotowa?">Dwoje dzieci — bez polskich znaków (limit)</button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="col">
+        <h2>Skrzynka</h2>
+        <div id="mails-list" class="list"></div>
+    </section>
+
+    <section class="col">
+        <h2>ai_inbox</h2>
+        <div id="inbox-list" class="list"></div>
+    </section>
+
+    <section class="col">
+        <div class="subsection">
+            <h2>Zadania dla człowieka</h2>
+            <div id="tasks-list" class="list"></div>
+        </div>
+
+        <div class="subsection">
+            <div class="subsection-header">
+                <h2>Statystyki</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="stats">Statystyki</button>
+                    <button class="tab-btn" data-tab="log">Log</button>
+                </div>
+            </div>
+            <div id="stats-panel" class="stats-panel"></div>
+            <pre id="activity-log" class="log" hidden></pre>
+        </div>
+    </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

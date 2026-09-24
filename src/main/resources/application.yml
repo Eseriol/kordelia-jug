@@ -1,0 +1,65 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: kordelia-demo
+  threads:
+    virtual:
+      enabled: true
+  ai:
+    # Od Spring AI 2.x sam starter na classpath już nie wystarcza do aktywacji —
+    # trzeba jawnie wskazać dostawcę (żeby dało się bezpiecznie trzymać kilka
+    # starterów na classpath naraz bez konfliktu, patrz ClaudeClassifier/OllamaClassifier).
+    model:
+      chat: google-genai
+    google:
+      genai:
+        # Klucz WYŁĄCZNIE ze zmiennej środowiskowej — nigdy nie wpisuj klucza tutaj
+        # ani nie commituj go do repo. Ustawienie: export GEMINI_API_KEY=...
+        # Klucz z aistudio.google.com/api-keys — darmowy tier, bez karty płatniczej.
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          # UWAGA: to jest "spring.ai.google.genai.chat.model", NIE "...chat.options.model" —
+          # ta druga forma to starsza wersja tego property (Spring AI 2.0-SNAPSHOT), już nieaktualna.
+          # Flash — darmowy tier w Google AI Studio, w sam raz do krótkich maili.
+          # Google wypuszcza nowe generacje Flash co kilka-kilkanaście tygodni
+          # (2.5 → 3.5 maj 2026 → 3.6 lipiec 2026 → 3.8 wrzesień 2026). Jeśli to znów
+          # zwróci 404, sprawdź aktualną nazwę modelu w aistudio.google.com — stare
+          # nazwy bywają wycofywane bez długiego okresu przejściowego.
+          model: gemini-3.5-flash
+
+# Retry: 3 próby z backoffem wykładniczym. CircuitBreaker: po serii błędów (brak klucza,
+# brak internetu, kill switch z panelu demo) przechodzi w stan OPEN i kolejne wywołania
+# od razu lecą do fallbacku (patrz GeminiClassifier.classifyFallback) zamiast czekać
+# na kolejny timeout.
+resilience4j:
+  retry:
+    instances:
+      aiProvider:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+  circuitbreaker:
+    instances:
+      aiProvider:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 3
+  # Ogranicza liczbę RÓWNOCZESNYCH wywołań do Gemini — darmowy tier ma niski limit
+  # zapytań/minutę, a triage całej skrzynki odpala kilka maili naraz na wirtualnych
+  # wątkach. WAŻNE: max-wait-duration musi być dłuższe niż realny czas pojedynczego
+  # wywołania pod throttlingiem (obserwowane: pojedyncze zapytania potrafią trwać
+  # kilkadziesiąt sekund) — inaczej czekające maile dostają BulkheadFullException
+  # zamiast doczekać się wolnego miejsca w kolejce (to nam się realnie zdarzyło).
+  bulkhead:
+    instances:
+      aiProvider:
+        max-concurrent-calls: 3
+        max-wait-duration: 45s
+
+logging:
+  level:
+    pl.kordelia: INFO
